@@ -17,8 +17,8 @@
  *
 ****************************************************************************************/
 
-#ifndef __H_WORD_ANALYSE_H__
-#define __H_WORD_ANALYSE_H__
+#ifndef WORD_ANALYSE_H
+#define WORD_ANALYSE_H
 
 /***************************************************************************************/
 typedef enum word_type
@@ -37,12 +37,12 @@ extern "C" {
 HT_API BOOL is_char(char ch);
 HT_API BOOL is_num(char ch);
 HT_API BOOL is_separator(char ch);
-HT_API BOOL is_integer(char * p_str);
+HT_API BOOL is_integer(const char * p_str);
 
 HT_API BOOL get_line_text(char * buf, int cur_line_offset, int max_len, int * len, int * next_line_offset);
-HT_API BOOL get_sip_line(char * p_buf, int max_len, int * len, BOOL * have_next_line);
-HT_API BOOL get_line_word(char * line, int cur_word_offset, int line_max_len, char * word_buf, int buf_len, int * next_word_offset, WORD_TYPE w_t);
-HT_API BOOL get_name_value_pair(char * text_buf, int text_len, const char * name, char * value, int value_len);
+HT_API BOOL get_sip_line(char * buf, int max_len, int * len, BOOL * have_next_line);
+HT_API BOOL get_line_word(const char * line, int cur_word_offset, int line_max_len, char * word_buf, int buf_len, int * next_word_offset, WORD_TYPE w_t);
+HT_API BOOL get_name_value_pair(const char * text_buf, int text_len, const char * name, char * value, int value_len);
 
 #ifdef __cplusplus
 }

@@ -27,7 +27,6 @@
 /***************************************************************************************/
 
 ONVIF_DEVICE g_device;
-ONVIF_DEVICE g_device2;
 
 #define MAX_DEV_NUMS     10
 
@@ -39,10 +38,6 @@ int getDeviceIndex(ONVIF_DEVICE * p_device)
     {
         return 0;
     }
-    else if (p_device == &g_device2)
-    {
-        return 1;
-    }
 
     return -1;
 }
@@ -53,10 +48,6 @@ ONVIF_DEVICE * getDeviceByIndex(int index)
     {
         return &g_device;
     }
-    else if (1 == index)
-    {
-        return &g_device2;
-    }
 
     return NULL;
 }
@@ -66,7 +57,7 @@ ONVIF_DEVICE * getDeviceByIndex(int index)
  */
 void eventNotifyCallback(Notify_REQ * p_req, void * p_data)
 {
-    NotificationMessageList * p_notify = p_req->notify;  
+    NotificationMessageList * p_notify = p_req->notify;
     NotificationMessageList * p_tmp = p_notify;
 
     printf("receive event : \r\n");
@@ -87,6 +78,7 @@ void eventNotifyCallback(Notify_REQ * p_req, void * p_data)
     p_dev = getDeviceByIndex(index);
     if (NULL == p_dev)
     {
+        onvif_free_NotificationMessages(&p_req->notify);
         return;
     }
     
@@ -97,7 +89,8 @@ void eventNotifyCallback(Notify_REQ * p_req, void * p_data)
     // max save 100 event notify
     if (p_dev->events.notify_nums > 100)
     {
-        p_dev->events.notify_nums -= onvif_device_free_NotificationMessages(p_dev, p_dev->events.notify_nums - 100);
+        int nums = onvif_device_free_NotificationMessages(p_dev, p_dev->events.notify_nums - 100);
+        p_dev->events.notify_nums -= nums;
     }
 }
 
@@ -109,7 +102,7 @@ void subscribeDisconnectCallback(ONVIF_DEVICE * p_dev, void * p_data)
     printf("\r\nsubscribeDisconnectCallback, %s\r\n", p_dev->binfo.XAddr.host);
 
     BOOL ret = FALSE;
-    
+
     ret = Subscribe(p_dev, getDeviceIndex(p_dev));
 
     printf("Subscribe, ret = %d\r\n", ret);
@@ -169,6 +162,12 @@ void errorHandler(ONVIF_DEVICE * p_device)
 
 int main(int argc, char* argv[])
 {
+    if (argc < 6)
+    {
+        printf("Usage : %s ip port https user pass", argv[0]);
+        return 0;
+    }
+    
     network_init();
 
     // open log file
@@ -197,9 +196,9 @@ int main(int argc, char* argv[])
     memset(&g_device, 0, sizeof(g_device));
 
     // init device
-    onvif_initDevice(&g_device, "192.168.1.3", 8000, 0);
+    onvif_initDevice(&g_device, argv[1], atoi(argv[2]), atoi(argv[3]));
     // set device login information
-    onvif_SetAuthInfo(&g_device, "admin", "admin");
+    onvif_SetAuthInfo(&g_device, argv[4], argv[5]);
     // set auth method
     onvif_SetAuthMethod(&g_device, AuthMethod_UsernameToken);
     // set request timeout
@@ -239,52 +238,6 @@ int main(int argc, char* argv[])
         {
             errorHandler(&g_device);
             printf("Subscribe failed!\r\n");
-        }    
-    }
-
-    // init device
-    onvif_initDevice(&g_device2, "192.168.1.4", 8000, 0);
-    // set device login information
-    onvif_SetAuthInfo(&g_device2, "admin", "admin");
-    // set auth method
-    onvif_SetAuthMethod(&g_device2, AuthMethod_UsernameToken);
-    // set request timeout
-    onvif_SetReqTimeout(&g_device2, 5000);
-        
-    if (!GetSystemDateAndTime(&g_device2))
-    {
-        errorHandler(&g_device2);
-        printf("%s, GetSystemDateAndTime failed\r\n", g_device2.binfo.XAddr.host);
-    }  
-    
-    if (!GetCapabilities(&g_device2))
-    {
-        errorHandler(&g_device2);
-        printf("%s, GetCapabilities failed\r\n", g_device2.binfo.XAddr.host);
-    }
-
-    if (!GetServices(&g_device2))
-    {
-        errorHandler(&g_device2);
-        printf("%s, GetServices failed\r\n", g_device2.binfo.XAddr.host);
-    }
-
-    if (!GetDeviceInformation(&g_device2))
-    {
-        errorHandler(&g_device2);
-        printf("%s, GetDeviceInformation failed\r\n", g_device2.binfo.XAddr.host);
-    }
-
-    if (g_device2.Capabilities.events.support == 1)
-    {
-        if (Subscribe(&g_device2, getDeviceIndex(&g_device2)))
-        {
-            printf("Subscribe successful!\r\n");
-        }
-        else
-        {
-            errorHandler(&g_device2);
-            printf("Subscribe failed!\r\n");
         }
     }
 
@@ -299,7 +252,6 @@ int main(int argc, char* argv[])
     }
 
     onvif_free_device(&g_device); 
-    onvif_free_device(&g_device2);
 
     onvif_event_deinit();
     

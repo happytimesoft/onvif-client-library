@@ -17,8 +17,8 @@
  *
 ****************************************************************************************/
 
-#ifndef __H_ONVIF_PROBE_H__
-#define __H_ONVIF_PROBE_H__
+#ifndef ONVIF_PROBE_H
+#define ONVIF_PROBE_H
 
 #include "onvif.h"
 
@@ -26,7 +26,7 @@
 #define PROBE_MSGTYPE_HELLO     1
 #define PROBE_MSGTYPE_BYE       2
 
-#define MAX_PROBE_FD            8
+#define MAX_PROBE_FD            32
 
 /**
  * @brief
@@ -49,11 +49,16 @@ typedef void (* onvif_probe_cb)(DEVICE_BINFO * p_res, int msgtype, void * pdata)
 
 typedef struct
 {
+    int             family;
+    SOCKET          fd;
+} ONVIF_PROBE_FD;
+
+typedef struct
+{
     onvif_probe_cb  probe_cb;
     void *          probe_cb_data;
     void *          probe_mutex;
     pthread_t       probe_thread;
-    SOCKET          probe_fd[MAX_PROBE_FD];
     int             probe_interval;
     BOOL            probe_running;
     char            monitor_reference[100];
@@ -61,6 +66,7 @@ typedef struct
     onvif_probe_cb  monitor_cb;
     void *          monitor_cb_data;
     void *          monitor_mutex;
+    ONVIF_PROBE_FD  probe_fd[MAX_PROBE_FD];
 } ONVIF_PROBE_CLS;
 
 
@@ -117,7 +123,7 @@ HT_API void set_probe_interval(int interval);
  *  probe interval, unit is second, default is 30s
  *
  **/
-HT_API int  start_probe(const char * ip, int interval);
+HT_API BOOL  start_probe(const char * ip, int interval);
 
 /**
  * @brief

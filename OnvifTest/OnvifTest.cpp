@@ -99,7 +99,7 @@ ONVIF_DEVICE_EX * addDevice(ONVIF_DEVICE_EX * pdevice)
         // set request timeout
         onvif_SetReqTimeout(&p_dev->onvif_device, 5000);
         
-        pps_ctx_ul_add(m_dev_ul, p_dev);
+        pps_ul_add(m_dev_ul, p_dev);
     }
 
     return p_dev;
@@ -273,7 +273,7 @@ void onvifServiceCapabilitiesTest(ONVIF_DEVICE_EX * p_dev)
 #ifdef PROVISIONING_SUPPORT
     // provisioning service capabilities
     tpv_GetServiceCapabilities_RES tpv;
-    memset(&trv, 0, sizeof(trv));
+    memset(&tpv, 0, sizeof(tpv));
 
     ret = onvif_tpv_GetServiceCapabilities(&p_dev->onvif_device, NULL, &tpv);
 
@@ -283,7 +283,7 @@ void onvifServiceCapabilitiesTest(ONVIF_DEVICE_EX * p_dev)
 #ifdef SECURITY_SUPPORT
     // security service capabilities
     tas_GetServiceCapabilities_RES tas;
-    memset(&trv, 0, sizeof(trv));
+    memset(&tas, 0, sizeof(tas));
 
     ret = onvif_tas_GetServiceCapabilities(&p_dev->onvif_device, NULL, &tas);
 
@@ -291,10 +291,7 @@ void onvifServiceCapabilitiesTest(ONVIF_DEVICE_EX * p_dev)
 
     for (i = 0; i < tas.Capabilities.KeystoreCapabilities.sizeSignatureAlgorithms; i++)
     {
-        if (tas.Capabilities.KeystoreCapabilities.SignatureAlgorithms[i].parameters.ptr)
-        {
-            FreeBuff(tas.Capabilities.KeystoreCapabilities.SignatureAlgorithms[i].parameters.ptr);
-        }
+        onvif_free_AlgorithmIdentifier(&tas.Capabilities.KeystoreCapabilities.SignatureAlgorithms[i]);
     }
 #endif
 }
@@ -303,7 +300,6 @@ void onvifNetworkTest(ONVIF_DEVICE_EX * p_dev)
 {
     BOOL ret;
 
-    while (1)
     {
         tds_GetNetworkInterfaces_RES res;
         memset(&res, 0, sizeof(res));
@@ -313,10 +309,8 @@ void onvifNetworkTest(ONVIF_DEVICE_EX * p_dev)
         printf("onvif_tds_GetNetworkInterfaces return ret = %d\n", ret);
 
         onvif_free_NetworkInterfaces(&res.NetworkInterfaces);
-        break;
     }
 
-    while (1)
     {
         tds_GetScopes_RES res;
         memset(&res, 0, sizeof(res));
@@ -324,11 +318,8 @@ void onvifNetworkTest(ONVIF_DEVICE_EX * p_dev)
         ret = onvif_tds_GetScopes(&p_dev->onvif_device, NULL, &res);
 
         printf("onvif_tds_GetScopes return ret = %d\n", ret);
-
-        break;
     }
 
-    while (1)
     {
         tds_GetNetworkDefaultGateway_RES res;
         memset(&res, 0, sizeof(res));
@@ -336,11 +327,8 @@ void onvifNetworkTest(ONVIF_DEVICE_EX * p_dev)
         ret = onvif_tds_GetNetworkDefaultGateway(&p_dev->onvif_device, NULL, &res);
 
         printf("onvif_tds_GetNetworkDefaultGateway return ret = %d\n", ret);
-
-        break;
     }
 
-    while (1)
     {
         tds_GetDNS_RES res;
         memset(&res, 0, sizeof(res));
@@ -348,11 +336,8 @@ void onvifNetworkTest(ONVIF_DEVICE_EX * p_dev)
         ret = onvif_tds_GetDNS(&p_dev->onvif_device, NULL, &res);
 
         printf("onvif_tds_GetDNS return ret = %d\n", ret);
-
-        break;
     }
 
-    while (1)
     {
         tds_GetZeroConfiguration_RES res;
         memset(&res, 0, sizeof(res));
@@ -360,8 +345,6 @@ void onvifNetworkTest(ONVIF_DEVICE_EX * p_dev)
         ret = onvif_tds_GetZeroConfiguration(&p_dev->onvif_device, NULL, &res);
 
         printf("onvif_tds_GetZeroConfiguration return ret = %d\n", ret);
-
-        break;
     }
 }
 
@@ -671,7 +654,7 @@ void onvifMediaTest(ONVIF_DEVICE_EX * p_dev)
 void onvifUserTest(ONVIF_DEVICE_EX * p_dev)
 {
     BOOL ret;
-    char username[32];
+    char username[32], oldname[32], oldpass[32];
 
     // CreateUsers
     tds_CreateUsers_REQ req;
@@ -693,7 +676,10 @@ void onvifUserTest(ONVIF_DEVICE_EX * p_dev)
         return;
     }
 
-    onvif_SetAuthInfo(&p_dev->onvif_device, username, "testpass");    
+    strcpy(oldname, p_dev->onvif_device.username);
+    strcpy(oldpass, p_dev->onvif_device.password);
+
+    onvif_SetAuthInfo(&p_dev->onvif_device, username, "testpass");
 
     // GetNetworkProtocols
     tds_GetNetworkProtocols_REQ req1;
@@ -705,7 +691,18 @@ void onvifUserTest(ONVIF_DEVICE_EX * p_dev)
     ret = onvif_tds_GetNetworkProtocols(&p_dev->onvif_device, &req1, &res1);
     
     printf("onvif_tds_GetNetworkProtocols return ret = %d\n", ret);
+
+    // DeleteUsers
+    tds_DeleteUsers_REQ req2;
+    memset(&req2, 0, sizeof(req2));
+
+    strcpy(req2.Username, username);
+
+    ret = onvif_tds_DeleteUsers(&p_dev->onvif_device, &req2, NULL);
     
+    printf("onvif_tds_DeleteUsers return ret = %d\n", ret);
+
+    onvif_SetAuthInfo(&p_dev->onvif_device, oldname, oldpass);
 }
 
 void onvifGeoLocationTest(ONVIF_DEVICE_EX * p_dev)
@@ -765,7 +762,7 @@ void onvifGeoLocationTest(ONVIF_DEVICE_EX * p_dev)
 
     printf("onvif_tds_SetGeoLocation return ret = %d\n", ret);
 
-    onvif_free_LocationEntitis(&res.Location);
+    onvif_free_LocationEntities(&res.Location);
 }
 
 void onvifImageTest(ONVIF_DEVICE_EX * p_dev)
@@ -1016,7 +1013,7 @@ void onvifDeviceIOTest(ONVIF_DEVICE_EX * p_dev)
 
     memset(&req9, 0, sizeof(req9));
 
-    req8.DigitalInputs = res6.DigitalInputs;
+    req9.DigitalInputs = res6.DigitalInputs;
     
     ret = onvif_tmd_SetDigitalInputConfigurations(&p_dev->onvif_device, &req9, NULL);
 
@@ -1998,7 +1995,7 @@ void onvifAnalyticsTest(ONVIF_DEVICE_EX * p_dev)
 
     printf("onvif_tan_GetSupportedMetadata return ret = %d\n", ret);
 
-    onvif_free_MetadataInfo(&res4.AnalyticsModule);
+    onvif_free_MetadataInfos(&res4.AnalyticsModule);
 }
 
 #ifdef PROFILE_C_SUPPORT
@@ -3009,7 +3006,7 @@ void onvifReplayTest(ONVIF_DEVICE_EX * p_dev)
     trp_SetReplayConfiguration_REQ req5;
     memset(&req5, 0, sizeof(req5));
 
-    req2.Configuration.SessionTimeout = res.Configuration.SessionTimeout;
+    req5.Configuration.SessionTimeout = res.Configuration.SessionTimeout;
     
     ret = onvif_trp_SetReplayConfiguration(&p_dev->onvif_device, &req5, NULL);
 
@@ -3387,7 +3384,7 @@ void onvifAccessRulesTest(ONVIF_DEVICE_EX * p_device)
 
     for (i = 0; i < res.sizeAccessProfile; i++)
     {
-        req1.sizeToken++;
+        req3.sizeToken++;
         strcpy(req3.Token[i], res.AccessProfile[i].token);
     }
     
@@ -4015,6 +4012,7 @@ void onvifProvisioningTest(ONVIF_DEVICE_EX * p_device)
 void onvifSecurityTest(ONVIF_DEVICE_EX * p_device)
 {
     BOOL ret;
+    uint32 i;
 
     tas_UploadPassphrase_REQ req;
     tas_UploadPassphrase_RES res;
@@ -4108,6 +4106,11 @@ void onvifSecurityTest(ONVIF_DEVICE_EX * p_device)
 
     printf("onvif_tas_GetAllCertificates return ret = %d\n", ret);
 
+    for (i = 0; i < res7.sizeCertificate; i++)
+    {
+        onvif_free_X509Certificate(&res7.Certificate[i]);
+    }
+
     tas_GetCertificate_REQ req8;
     tas_GetCertificate_RES res8;
 
@@ -4119,6 +4122,8 @@ void onvifSecurityTest(ONVIF_DEVICE_EX * p_device)
     ret = onvif_tas_GetCertificate(&p_device->onvif_device, &req8, &res8);
 
     printf("onvif_tas_GetCertificate return ret = %d\n", ret);
+
+    onvif_free_X509Certificate(&res8.Certificate);
 
     tas_DeleteCertificate_REQ req9;
 
@@ -4161,6 +4166,8 @@ void onvifSystemMaintainTest(ONVIF_DEVICE_EX * p_device)
     tds_GetSystemLog_RES res;
 
     req.LogType = SystemLogType_System;
+
+    memset(&res, 0, sizeof(res));
     
     ret = onvif_tds_GetSystemLog(&p_device->onvif_device, &req, &res);
 
@@ -4244,7 +4251,7 @@ void parseEventTopic(char * xml)
 {
     LKLIST * p_list = hlist_create(FALSE);
     
-    XMLN * p_root = xxx_hxml_parse(xml, (int)strlen(xml));
+    XMLN * p_root = xml_parse(xml, (int)strlen(xml));
     if (p_root)
     {
         XMLN * p_child = p_root->f_child;
@@ -4296,7 +4303,7 @@ void parseEventTopic(char * xml)
 
     xml_node_del(p_root);
 
-    hlist_free_container(p_list);
+    hlist_destroy(p_list);
 }
 
 void onvifEventTest(ONVIF_DEVICE_EX * p_device)
@@ -4534,7 +4541,7 @@ BOOL mediaProfile2Profile(ONVIF_DEVICE_EX * p_device)
 }
 
 BOOL getDevInfo1(ONVIF_DEVICE_EX * p_device)
-{    
+{
     if (!GetProfiles(&p_device->onvif_device))
     {
         return FALSE;
@@ -5060,21 +5067,25 @@ void probeCallback(DEVICE_BINFO * p_res, int msgtype, void * p_data)
 void eventNotifyCallback(Notify_REQ * p_req, void * p_data)
 {
     ONVIF_DEVICE_EX * p_dev;
-    NotificationMessageList * p_notify = p_req->notify;    
-         
+    NotificationMessageList * p_notify = p_req->notify;
+
     p_dev = findDeviceByNotify(p_req);
     if (p_dev)
     {
-        onvif_device_add_NotificationMessages(&p_dev->onvif_device, p_notify);
+        onvif_free_NotificationMessages(&p_req->notify);
+        return;
+    }
+    
+    onvif_device_add_NotificationMessages(&p_dev->onvif_device, p_notify);
 
-        p_dev->onvif_device.events.notify_nums += onvif_get_NotificationMessages_nums(p_notify);
+    p_dev->onvif_device.events.notify_nums += onvif_get_NotificationMessages_nums(p_notify);
 
-        // max save 100 event notify
-        if (p_dev->onvif_device.events.notify_nums > 100)
-        {
-            p_dev->onvif_device.events.notify_nums -= 
-                onvif_device_free_NotificationMessages(&p_dev->onvif_device, p_dev->onvif_device.events.notify_nums - 100);
-        }
+    // max save 100 event notify
+    if (p_dev->onvif_device.events.notify_nums > 100)
+    {
+        int nums = onvif_device_free_NotificationMessages(&p_dev->onvif_device, 
+                        p_dev->onvif_device.events.notify_nums - 100);
+        p_dev->onvif_device.events.notify_nums -= nums;
     }
 }
 
@@ -5379,8 +5390,8 @@ int main(int argc, char* argv[])
     http_msg_buf_init(10 * MAX_DEV_NUMS);
 
     // max support 100 devices
-    m_dev_fl = pps_ctx_fl_init(100, sizeof(ONVIF_DEVICE_EX), TRUE);
-    m_dev_ul = pps_ctx_ul_init(m_dev_fl, TRUE);
+    m_dev_fl = pps_fl_init(100, sizeof(ONVIF_DEVICE_EX), TRUE);
+    m_dev_ul = pps_ul_init(m_dev_fl, TRUE);
 
     // init event handler
     //  bind the http server to 0.0.0.0:30100 and https server to 0.0.0.0:30400

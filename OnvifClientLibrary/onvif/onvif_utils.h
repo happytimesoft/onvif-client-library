@@ -17,8 +17,8 @@
  *
 ****************************************************************************************/
 
-#ifndef _ONVIF_UTILS_H_
-#define _ONVIF_UTILS_H_
+#ifndef ONVIF_UTILS_H
+#define ONVIF_UTILS_H
 
 #include "sys_inc.h"
 #include "onvif.h"
@@ -38,7 +38,6 @@ HT_API int          onvif_parse_xaddr(const char * pdata, char * host, int hosts
 HT_API time_t       onvif_datetime_to_time_t(onvif_DateTime * p_datetime);
 HT_API void         onvif_time_t_to_datetime(time_t n, onvif_DateTime * p_datetime);
 HT_API char       * onvif_format_datetime_str(time_t n, int flag, const char * format, char * buff, int buflen);
-HT_API int          onvif_parse_uri(const char * p_in, char * p_out, int outlen);
 HT_API char       * onvif_format_float_num(float num, int precision, char * buff, int len);
 
 #ifdef __cplusplus

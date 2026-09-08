@@ -27,7 +27,7 @@
 #define MAX_PWDL            32
 #define MAX_NUML            64
 #define MAX_UA_ALT_NUM      8
-
+#define NET_BUFF_SIZE       2048
 
 /***************************************************************************************/
 typedef struct header_value
@@ -74,11 +74,16 @@ typedef struct http_digest_auth_info
     char    auth_response[100];
 } HD_AUTH_INFO;
 
+typedef enum ht_auth_mode
+{
+    HT_AUTH_MODE_INVALID = -1,
+    HT_AUTH_MODE_BASIC,
+    HT_AUTH_MODE_DIGEST
+} HT_AUTH_MODE;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-extern HT_API PPSN_CTX * hdrv_buf_fl;
 
 /***********************************************************************/
 HT_API BOOL     net_buf_init(int num, int size);

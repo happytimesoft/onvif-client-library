@@ -17,12 +17,16 @@
  *
 ****************************************************************************************/
 
-#ifndef _HTTP_H_
-#define _HTTP_H_
+#ifndef HT_HTTP_H
+#define HT_HTTP_H
 
 #include "sys_buf.h"
 #include "ppstack.h"
 
+
+/***************************************************************************************/
+
+#define HTTP_MIN_LEN        16
 
 /***************************************************************************************/
 
@@ -37,6 +41,7 @@ typedef enum http_request_msg_type
     HTTP_MT_POST,
     HTTP_MT_SUBSCRIBE,
     HTTP_MT_UNSUBSCRIBE,
+    HTTP_MT_DELETE,
 } HTTP_MT;
 
 typedef enum http_content_type
@@ -60,8 +65,12 @@ typedef enum http_content_type
                              type == CTT_TXT || type == CTT_SDP)
 
 
-typedef struct _http_msg_content
+typedef struct http_msg_content
 {
+    uint32          keep_alive   : 1;
+    uint32          msg_malloced : 1;
+    uint32          reserved     : 30;
+    
     uint32          msg_type;
     uint32          msg_sub_type;
     HDRV            first_line;
@@ -73,9 +82,9 @@ typedef struct _http_msg_content
     int             ctt_len;
     HTTPCTT         ctt_type;
     char            boundary[256];
-    int             keep_alive;
 
     char          * msg_buf;
+    int             buf_size;
     int             buf_offset;
 } HTTPMSG;
 
@@ -123,7 +132,7 @@ typedef struct http_req
     uint32          https     : 1;      // https flag
     uint32          resv      : 30;
     
-    SOCKET          cfd;                // client socket    
+    SOCKET          cfd;                // client socket
     uint32          port;               // server port
     char            host[256];          // server host
     char            url[256];           // the request url
@@ -133,7 +142,7 @@ typedef struct http_req
     char            rcv_buf[2052];      // static receiving buffer
     char          * dyn_recv_buf;       // dynamic receiving buffer
     int             rcv_dlen;           // received data length
-    int             hdr_len;            // http header length            
+    int             hdr_len;            // http header length
     int             ctt_len;            // context  length
     char            boundary[256];      // boundary, for CTT_MULTIPART
     char          * rbuf;               // pointer to rcv_buf or dyn_recv_buf
@@ -141,10 +150,10 @@ typedef struct http_req
 
     HTTPMSG       * rx_msg;             // rx message
 
-    int             auth_mode;          // 0 - baisc; 1 - digest
+    HT_AUTH_MODE    auth_mode;          // http auth mode
     HD_AUTH_INFO    auth_info;          // http auth information
 
-    void          * ssl;                // https SSL 
+    void          * ssl;                // https SSL
     void          * ssl_mutex;          // https SSL mutex
 } HTTPREQ;
 
@@ -217,7 +226,7 @@ typedef struct http_srv_s
 
     int             ep_fd;              // epoll fd
     void          * ep_events;          // epoll events
-    int             ep_event_num;       // epoll event number    
+    int             ep_event_num;       // epoll event number
 
     void          * ssl_ctx;            // ssl context
 } HTTPSRV;

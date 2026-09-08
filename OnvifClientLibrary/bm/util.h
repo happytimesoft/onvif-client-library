@@ -17,8 +17,8 @@
  *
 ****************************************************************************************/
 
-#ifndef __H_UTIL_H__
-#define __H_UTIL_H__
+#ifndef UTIL_H
+#define UTIL_H
 
 
 /*************************************************************************/
@@ -52,7 +52,7 @@ typedef struct
     BOOL                ipv4_flag;
     BOOL                ipv6_flag;
     struct sockaddr_in  ipv4_addr;
-    struct sockaddr_in6 ipv6_addr; 
+    struct sockaddr_in6 ipv6_addr;
 } HT_SOCKADDR;
 
 typedef enum
@@ -79,8 +79,8 @@ HT_API BOOL         get_route_if_ip(struct sockaddr * dst_ip, struct sockaddr * 
 HT_API BOOL         get_default_if_ip(struct sockaddr * addr);
 HT_API char       * get_local_ip(uint16 family, char * ip, int size);
 HT_API BOOL         get_address_by_name(const char * host_name, HT_PROTOCOL protocol, HT_SOCKADDR * addr);
-HT_API const char * get_default_gateway();
-HT_API const char * get_dns_server();
+HT_API const char * get_default_gateway(char * gateway, size_t len);
+HT_API const char * get_dns_server(char * dns, size_t len);
 HT_API int          get_mask_length_by_sockaddr(struct sockaddr * mask);
 HT_API int          get_mask_length(const char * mask);
 HT_API const char * get_mask_by_length(int family, int masklen, char * mask, int size);
@@ -92,23 +92,22 @@ HT_API char       * lowercase(char * str);
 HT_API char       * uppercase(char * str);
 
 HT_API BOOL         bin_to_hex_str(uint8 * bin, int binlen, char * hex, int hexlen);
-HT_API int          hex_str_to_bin(char * hex, int hexlen, uint8 * bin, int binlen);
+HT_API int          hex_str_to_bin(const char * hex, int hexlen, uint8 * bin, int binlen);
 
 HT_API int          url_encode(const char * src, const int srcsize, char * dst, const int dstsize);
-HT_API int          url_decode(char * dst, char const * src, uint32 len);
+HT_API int          url_decode(char * dst, char const * src, int len);
 HT_API void         url_split(char const* url, char *proto, int proto_size, char *user, int user_size, char *pass, 
                                  int pass_size, char *host, int host_size, int *port, char *path, int path_size);
 HT_API char       * replace_amp_entity(const char* input, char *output, int output_len);
+HT_API uint32       get_rand();
 
 /*************************************************************************/
-HT_API time_t       get_time_by_string(char * p_time_str);
+HT_API time_t       get_time_by_string(const char * p_time_str);
 HT_API void         get_time_str(char * buff, int len);
 HT_API void         get_time_str_day_off(time_t nt, char * buff, int len, int dayoff);
 HT_API void         get_time_str_mon_off(time_t nt, char * buff, int len, int moffset);
 HT_API time_t       get_time_by_tstring(const char * p_time_str);
 HT_API void         get_tstring_by_time(time_t t, char * buff, int len);
-
-HT_API SOCKET       tcp_connect_timeout(struct sockaddr * addr, int timeout);
 
 /*************************************************************************/
 HT_API void         network_init();
@@ -127,7 +126,7 @@ HT_API int          getifaddrs(struct ifaddrs **ifap);
 }
 #endif
 
-#endif  // __H_UTIL_H__
+#endif
 
 
 

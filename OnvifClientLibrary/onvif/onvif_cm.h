@@ -33,7 +33,7 @@
 #define MAX_SERVER_PORT         4
 #define MAX_GATEWAY             2
 #define MAX_RES_NUMS            32
-#define MAX_SCOPE_NUMS          100
+#define MAX_SCOPE_NUMS          20
 #define MAX_USERS               10
 #define MAX_IP_ADDRS            4
 
@@ -553,6 +553,23 @@ typedef enum
     IPv6DHCPConfiguration_Off = 3
 } onvif_IPv6DHCPConfiguration;
 
+typedef enum
+{
+    OAuthAuthorizationCode = 0,                         // OAuth2 authorization code flow per RFC 6749
+    OAuthClientCredentials = 1,                         // OAuth2 client credentials grant flow per RFC 6749
+    OIDC2AuthorizationCode = 2,                         // OpenID Connect authorization code flow per Open ID Connect Core
+} onvif_AuthorizationServerConfigurationType;
+
+typedef enum
+{
+    ClientAuthenticationMethod_client_secret_basic = 0, // Use HTTP Authorization header to specify client_secret as per RFC 6749
+    ClientAuthenticationMethod_client_secret_post = 1,  // Use HTTP POST body to specify client_secret as per RFC 6749
+    ClientAuthenticationMethod_client_secret_jwt = 2,   // Use a HMAC signed JWT using client_secret as shared secret per OpenID Connect Core
+    ClientAuthenticationMethod_private_key_jwt = 3,     // Use PKI signed JWT using private key as per OpenID Connect Core
+    ClientAuthenticationMethod_tls_client_auth = 4,     // Use PKI certificate to authenticate as per RFC 8705
+    ClientAuthenticationMethod_self_signed_tls_client_auth = 5 // Use self-signed certificate to authenticate as per RFC 8705
+} onvif_ClientAuthenticationMethod;
+
 /***************************************************************************************/
 typedef struct
 {
@@ -832,8 +849,11 @@ typedef struct
     uint32  SupportedEncryptionModesFlag  : 1;          // Indicates whether the field SupportedEncryptionModes is valid
     uint32  OverrideSegmentDuration       : 1;          // Indicates if the device supports the OverrideSegmentDuration command
     uint32  AsymmetricEncryptionSupported : 1;          // Indicates if the device supports asymmetric encryption
+    uint32  ScheduledRecording  : 1;                    // Indicates if the device supports scheduled recording
+    uint32  OnboardStorage      : 1;                    // Indicates if the device supports recording to onboard storage, default value is true. If false, device shall support recording to an external target
+    uint32  SegmentExport       : 1;                    // Indicates support for ExportRecordedSegments
     uint32  support             : 1;                    // Indication if the device supports recording service
-    uint32  reserved            : 12;
+    uint32  reserved            : 9;
 
     uint32  MaxStringLength;
     float   MaxRate;                                    // optional, Maximum supported bit rate for all tracks of a recording in kBit/s
@@ -864,8 +884,10 @@ typedef struct
 {
     uint32  MetadataSearch      : 1;
     uint32  GeneralStartEvents  : 1;                    // Indicates support for general virtual property events in the FindEvents method
+    uint32  NLSearch            : 1;                    // Indicates support for natural language based search
+    uint32  ImageSearch         : 1;                    // Indicates support for image based search
     uint32  support             : 1;                    // Indication if the device supports search service
-    uint32  reserved            : 29;
+    uint32  reserved            : 27;
     
     onvif_Version   Version;                            // required
     onvif_XAddr     XAddr;
@@ -1009,13 +1031,16 @@ typedef struct
                                                         //  deletion or change of a privacy mask done for one video source configuration 
                                                         //  will automatically be applied by the device to a corresponding privacy mask 
                                                         //  for all other video source configuration associated with the same video source.
+    uint32  WebRTCFlag          : 1;                    // Indicates whether the field WebRTC is valid
     uint32  support             : 1;                    // Indication if the device supports media service2
-    uint32  Reserved            : 24;
+    uint32  Reserved            : 23;
     
     onvif_ProfileCapabilities       ProfileCapabilities;        // required, Media profile capabilities
     onvif_StreamingCapabilities     StreamingCapabilities;      // required, Streaming capabilities
     onvif_MediaSigningCapabilities  MediaSigningCapabilities;   // Required, Media signing capabilities
-
+    
+    int     WebRTC;                                     // Optional, Indicates number of supported WebRTC configurations.
+        
     onvif_Version   Version;                            // required
     onvif_XAddr     XAddr;
 } onvif_MediaCapabilities2;
@@ -1204,7 +1229,7 @@ typedef struct
     uint32  Reserved              : 13;
     
     uint32  sizeSignatureAlgorithms;
-    onvif_AlgorithmIdentifier   SignatureAlgorithms[4]; // optional, The signature algorithms supported by the keystore implementation
+    onvif_AlgorithmIdentifier   SignatureAlgorithms[8]; // optional, The signature algorithms supported by the keystore implementation
     uint32  MaximumNumberOfKeys;                        // optional, Indicates the maximum number of keys that the device can store simultaneously
     uint32  MaximumNumberOfCertificates;                // optional, Indicates the maximum number of certificates that the device can store simultaneously
     uint32  MaximumNumberOfCertificationPaths;          // optional, Indicates the maximum number of certification paths that the device can store simultaneously
@@ -1686,6 +1711,13 @@ typedef struct
     onvif_UserLevel UserLevel;                          // required 
 } onvif_User;
 
+typedef struct _UserList
+{
+    struct _UserList * next;
+
+    onvif_User  User;
+} UserList;
+
 typedef struct 
 {
     uint32  PasswordFlag    : 1;                        // Indicates whether the field Password is valid
@@ -1722,6 +1754,13 @@ typedef struct
     onvif_ImagingSettings   ImagingSettings;            // optional
 } onvif_VideoSource;
 
+typedef struct _VideoSourceList
+{
+    struct _VideoSourceList * next;
+    
+    onvif_VideoSource VideoSource; 
+} VideoSourceList;
+
 typedef struct
 {
     uint32  DescriptionFlag     : 1;                    // Indicates whether the field Description is valid
@@ -1739,6 +1778,13 @@ typedef struct
 
     onvif_VideoResolution   MaxResolution;              // required, Max horizontal and vertical resolution for this video source mode
 } onvif_VideoSourceMode;
+
+typedef struct _VideoSourceModeList
+{
+    struct _VideoSourceModeList * next;
+
+    onvif_VideoSourceMode   VideoSourceMode;
+} VideoSourceModeList;
 
 typedef struct
 {
@@ -1786,7 +1832,6 @@ typedef struct
     onvif_VideoSourceConfigurationExtension Extension;  // optional
 } onvif_VideoSourceConfiguration;
 
-
 typedef struct
 {
     onvif_IntRange  XRange;                             // required
@@ -1832,6 +1877,13 @@ typedef struct
 
     int     MaximumNumberOfProfiles;                    // optional, Maximum number of profiles
 } onvif_VideoSourceConfigurationOptions;
+
+typedef struct _VideoSourceConfigurationList
+{
+    struct _VideoSourceConfigurationList * next;
+
+    onvif_VideoSourceConfiguration Configuration;
+} VideoSourceConfigurationList;
 
 typedef struct
 {
@@ -1893,11 +1945,25 @@ typedef struct
     int     SessionTimeout;                             // required, The rtsp session timeout for the related video stream, unit is second
 } onvif_VideoEncoderConfiguration;
 
+typedef struct _VideoEncoderConfigurationList
+{    
+    struct _VideoEncoderConfigurationList * next;
+
+    onvif_VideoEncoderConfiguration Configuration;
+} VideoEncoderConfigurationList;
+
 typedef struct 
 {
     char    token[ONVIF_TOKEN_LEN];                     // required
     int     Channels;                                   // required, number of available audio channels. (1: mono, 2: stereo)
 } onvif_AudioSource;
+
+typedef struct _AudioSourceList
+{    
+    struct _AudioSourceList * next;
+    
+    onvif_AudioSource AudioSource;
+} AudioSourceList;
 
 typedef struct
 {
@@ -1908,6 +1974,12 @@ typedef struct
     char    SourceToken[ONVIF_TOKEN_LEN];               // required, Token of the Audio Source the configuration applies to
 } onvif_AudioSourceConfiguration;
 
+typedef struct _AudioSourceConfigurationList
+{    
+    struct _AudioSourceConfigurationList * next;
+    
+    onvif_AudioSourceConfiguration  Configuration;
+} AudioSourceConfigurationList;
 
 typedef struct
 {
@@ -1924,6 +1996,13 @@ typedef struct
 
     int     SessionTimeout;                             // required, The rtsp session timeout for the related audio stream, unit is second
 } onvif_AudioEncoderConfiguration;
+
+typedef struct _AudioEncoderConfigurationList
+{
+    struct _AudioEncoderConfigurationList * next;
+    
+    onvif_AudioEncoderConfiguration Configuration;
+} AudioEncoderConfigurationList;
 
 typedef struct 
 {
@@ -2151,6 +2230,13 @@ typedef struct
     onvif_OSDImgConfiguration   Image;                  // Optional, Image configuration of OSD. It shall be present when the value of Type field is Image
 } onvif_OSDConfiguration;
 
+typedef struct _OSDConfigurationList
+{
+    struct _OSDConfigurationList * next;
+    
+    onvif_OSDConfiguration OSD;
+} OSDConfigurationList;
+
 typedef struct 
 {
     uint32  ImageFlag       : 1;                        // Indicates whether the field Image is valid
@@ -2304,6 +2390,13 @@ typedef struct
 
     onvif_PTZVector PTZPosition;                        // optional, A list of preset position
 } onvif_PTZPreset;
+
+typedef struct _PTZPresetList
+{
+    struct _PTZPresetList * next;
+    
+    onvif_PTZPreset PTZPreset;
+} PTZPresetList;
 
 typedef struct 
 {
@@ -2460,6 +2553,12 @@ typedef struct
     char    AuxiliaryCommands[10][64];                  // optional
 } onvif_PTZNode;
 
+typedef struct _PTZNodeList
+{
+    struct _PTZNodeList * next;
+
+    onvif_PTZNode   PTZNode;
+} PTZNodeList;
 
 typedef struct 
 {
@@ -2485,6 +2584,13 @@ typedef struct
     onvif_IntRange  PTZTimeout;                         // required, A timeout Range within which Timeouts are accepted by the PTZ Node
     onvif_PTControlDirectionOptions PTControlDirection; // optional,  
 } onvif_PTZConfigurationOptions;
+
+typedef struct _PTZConfigurationList
+{
+    struct _PTZConfigurationList * next;
+    
+    onvif_PTZConfiguration  Configuration;
+} PTZConfigurationList;
 
 typedef struct 
 {
@@ -2582,6 +2688,13 @@ typedef struct
     PTZPresetTourSpotList * TourSpot;                   // optional, A list of detail of touring spots including preset positions
     
 } onvif_PresetTour;
+
+typedef struct _PresetTourList
+{
+    struct _PresetTourList * next;
+
+    onvif_PresetTour    PresetTour;
+} PresetTourList;
 
 typedef struct
 {
@@ -2765,6 +2878,13 @@ typedef struct
     onvif_IPv6NetworkInterface  IPv6;                   // optional, IPv6 network interface configuration
     onvif_NetworkInterfaceExtension Extension;          // optional,
 } onvif_NetworkInterface;
+
+typedef struct _NetworkInterfaceList
+{
+    struct _NetworkInterfaceList * next;
+    
+    onvif_NetworkInterface  NetworkInterface;
+} NetworkInterfaceList;
 
 typedef struct
 {
@@ -3082,12 +3202,16 @@ typedef struct
 
 typedef struct
 {
-    char    SourceId[128];                              // required, Identifier for the source chosen by the client that creates the structure.
+    uint32  VideoSourceTokenFlag : 1;                   // Indicates whether the field VideoSourceToken is valid
+    uint32  Reserved : 31;
+
+    char    SourceId[256];                              // required, Identifier for the source chosen by the client that creates the structure.
                                                         //  This identifier is opaque to the device. Clients may use any type of URI for this field. A device shall support at least 128 characters
     char    Name[ONVIF_NAME_LEN];                       // required, Informative user readable name of the source, e.g. "Camera23". A device shall support at least 20 characters
     char    Location[100];                              // required, Informative description of the physical location of the source, e.g. the coordinates on a map
     char    Description[128];                           // required, Informative description of the source
-    char    Address[128];                               // required, URI provided by the service supplying data to be recorded. A device shall support at least 128 characters
+    char    Address[256];                               // required, URI provided by the service supplying data to be recorded. A device shall support at least 128 characters
+    char    VideoSourceToken[ONVIF_TOKEN_LEN];          // optional, The video source token of all recordings that will use this configuration
 } onvif_RecordingSourceInformation;
 
 typedef struct
@@ -3127,7 +3251,8 @@ typedef struct
     uint32  PostfixFlag         : 1;                    // Indicates whether the field Postfix is valid
     uint32  SpanDurationFlag    : 1;                    // Indicates whether the field SpanDuration is valid
     uint32  SegmentDurationFlag : 1;                    // Indicates whether the field SegmentDuration is valid
-    uint32  Reserved            : 28;
+    uint32  StorageStrategyFlag : 1;                    // Indicates whether the field StorageStrategy is valid
+    uint32  Reserved            : 27;
     
     char    Storage[ONVIF_TOKEN_LEN];                   // required , Token of a storage configuration
     char    Format[32];                                 // required , Format of the recording.See tt:TargetFormat for a list of definitions and capability trc:SupportedTargetFormats for the supported formats.
@@ -3144,6 +3269,10 @@ typedef struct
                                                         //  By specifying multiple encryption entries per recording, different tracks 
                                                         //  can be encrypted with different configurations.
                                                         //  Each track shall only be contained in one encryption configuration.
+    char    StorageStrategy[32];                        // optional, Strategy to be used on how to store recordings, see tt:StorageStrategy for allowed values. If undefined, defaults to External.
+                                                        //  External - Indicates that device must record to the storage defined by the StorageConfiguration token
+                                                        //  Local - Indicates that device must record on its local storage and can export recorded data to the external storage using ExportRecordedSegments
+                                                        //  Both - Indicates that device must record on both local storage and external storage and locally recorded data can be exported if connectivity issue prevented export to external storage during normal operation.
 } onvif_RecordingTargetConfiguration;
 
 typedef struct
@@ -3319,12 +3448,26 @@ typedef struct
     TrackList * Tracks;
 } onvif_Recording;
 
+typedef struct _RecordingList
+{
+    struct _RecordingList * next;
+
+    onvif_Recording Recording;
+} RecordingList;
+
 typedef struct
 {
     char    JobToken[ONVIF_TOKEN_LEN];                  // required
     
     onvif_RecordingJobConfiguration JobConfiguration;   // required
 } onvif_RecordingJob;
+
+typedef struct _RecordingJobList
+{
+    struct _RecordingJobList * next;
+
+    onvif_RecordingJob  RecordingJob;
+} RecordingJobList;
 
 typedef struct 
 {
@@ -3388,6 +3531,13 @@ typedef struct
 
     onvif_Message   Message;                            // required
 } onvif_NotificationMessage;
+
+typedef struct _NotificationMessageList
+{
+    struct _NotificationMessageList * next;
+
+    onvif_NotificationMessage   NotificationMessage;
+} NotificationMessageList;
 
 typedef struct 
 {
@@ -3806,6 +3956,18 @@ typedef struct
     ConfigDescriptionList * AnalyticsModuleDescription; // optional, 
 } onvif_SupportedAnalyticsModules;
 
+typedef struct _VideoAnalyticsConfigurationList
+{
+    struct _VideoAnalyticsConfigurationList * next;
+
+    ConfigList      * rules;                    // video analytics rule configuration
+    ConfigList      * modules;                  // video analytics module configuration
+
+    onvif_SupportedRules  SupportedRules;       // supported rules
+    
+    onvif_VideoAnalyticsConfiguration   Configuration;
+} VideoAnalyticsConfigurationList;
+
 typedef struct 
 {
     char    Type[128];                                  // required, Type of the Analytics Module Options represented by a unique QName. 
@@ -3862,6 +4024,13 @@ typedef struct
     onvif_MulticastConfiguration    Multicast;          // required, defines the multicast settings that could be used for video streaming
     onvif_AnalyticsEngineConfiguration  AnalyticsEngineConfiguration;   //optional, Defines whether the streamed metadata will include metadata from the analytics engines (video, cell motion, audio etc.)
 } onvif_MetadataConfiguration;
+
+typedef struct _MetadataConfigurationList
+{
+    struct _MetadataConfigurationList * next;
+    
+    onvif_MetadataConfiguration Configuration;
+} MetadataConfigurationList;
 
 typedef struct
 {
@@ -4675,6 +4844,28 @@ typedef struct _MaskList
     onvif_Mask  Mask;
 } MaskList;
 
+typedef struct
+{
+    uint32  CertPathValidationPolicyIDFlag : 1;         // Indicates whether the field CertPathValidationPolicyID is valid
+    uint32  ErrorFlag : 1;                              // Indicates whether the field Error is valid
+    uint32  Reserved  : 30;
+    
+    char    SignalingServer[256];                       // Required, The signaling server URI
+    char    CertPathValidationPolicyID[64];             // Optional, The CertPathValidationPolicyID for validating the signaling server certificate.
+    char    AuthorizationServer[64];                    // Required, The Authorization Server to use for getting access tokens.
+    char    DefaultProfile[64];                         // Required, The default media profile to use for streaming if no specific profile is specified when initializing a session.
+    BOOL    Enabled;                                    // Required, Enables/disables the configuration.
+    BOOL    Connected;                                  // Optional, Indicates if the device is connected to the server. This parameter is read-only.
+    char    Error[100];                                 // Optional, Optional user readable error information (readonly).
+} onvif_WebRTCConfiguration;
+
+typedef struct _WebRTCConfigurationList
+{
+    struct _WebRTCConfigurationList * next;
+
+    onvif_WebRTCConfiguration  Configuration;
+} WebRTCConfigurationList;
+
 // MEDIA2 Define End
 
 // Thermal Define Begin
@@ -5391,6 +5582,13 @@ typedef struct
     onvif_TrustAnchor TrustAnchor[4];                   // optional, The trust anchors of the certification path validation policy
 } onvif_CertPathValidationPolicy;
 
+typedef struct _CertPathValidationPolicyList
+{
+    struct _CertPathValidationPolicyList * next;
+
+    onvif_CertPathValidationPolicy CertPathValidationPolicy;
+} CertPathValidationPolicyList;
+
 typedef struct 
 {
     uint32  AliasFlag : 1;                              // Indicates whether the field Alias is valid
@@ -5436,6 +5634,33 @@ typedef struct _CertificationPathList
     
     onvif_CertificationPath CertificationPath;
 } CertificationPathList;
+
+typedef struct
+{
+    char    ServerUri[256];                             // Required, Authorization server metadata endpoint conforming to RFC8414, such as "https://your.domain/.well-known/openid-configuration"
+    char    ClientID[64];                               // Optional, Client identifier issued by the authorization server 
+    char    ClientSecret[100];                          // Optional, Client secret used to authenticate with the authorization server
+    char    Scope[100];                                 // Optional, The requested access scope(s)
+    char    KeyID[64];                                  // Optional, Key identifier for the private_key_jwt authentication method
+    char    CertificateID[64];                          // Optional, Certificate identifier for the self_signed_tls_client_auth authentication method
+    char    CertPathValidationPolicyID[64];             // Optional, The unique identifier of the certification path validation policy to be used for validating the server certificate
+    char    Type[32];                                   // Required, The type of configuration, onvif_AuthorizationServerConfigurationType lists the acceptable values
+    char    ClientAuth[64];                             // Optional, How to authenticate with the server, onvif_ClientAuthenticationMethod lists the acceptable values
+} onvif_AuthorizationServerConfigurationData;
+
+typedef struct
+{
+    char    token[ONVIF_TOKEN_LEN];                     // Required, 
+        
+    onvif_AuthorizationServerConfigurationData  Data;   // Required, 
+} onvif_AuthorizationServerConfiguration;
+
+typedef struct _AuthorizationServerConfigurationList
+{
+    struct _AuthorizationServerConfigurationList * next;
+
+    onvif_AuthorizationServerConfiguration  Configuration;
+} AuthorizationServerConfigurationList;
 
 // Security define end
 

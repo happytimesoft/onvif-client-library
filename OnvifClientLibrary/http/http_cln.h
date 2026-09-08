@@ -31,11 +31,13 @@ BOOL http_get_digest_info(HTTPMSG * rx_msg, HD_AUTH_INFO * auth_info);
 BOOL http_calc_auth_digest(HD_AUTH_INFO * auth_info, const char * method);
 int  http_build_auth_msg(HTTPREQ * p_http, const char * method, char * buff, int buflen);
 int  http_cln_auth_set(HTTPREQ * p_http, const char * user, const char * pass);
-BOOL http_cln_ssl_conn(HTTPREQ * p_http, int timeout);
+BOOL http_cln_ssl_conn(HTTPREQ * p_http);
 BOOL http_cln_rx(HTTPREQ * p_http);
 int  http_cln_tx(HTTPREQ * p_http, const char * p_data, int len);
-BOOL http_cln_rx_timeout(HTTPREQ * p_http, int timeout);
+BOOL http_cln_rx_timeout(HTTPREQ * p_http, int timeout /* millisecond */);
 void http_cln_free_req(HTTPREQ * p_http);
+BOOL http_cln_parse_url(HTTPREQ * p_http, const char * url, const char * normal_proto, const char * secure_proto, const char * user, const char * pass);
+BOOL http_cln_connect(HTTPREQ * p_http, int timeout /* millisecond */);
 
 #ifdef __cplusplus
 }

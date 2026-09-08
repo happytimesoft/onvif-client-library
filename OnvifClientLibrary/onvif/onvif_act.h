@@ -20,12 +20,16 @@
 #ifndef ONVIF_ACT_H
 #define ONVIF_ACT_H
 
+#include "sys_inc.h"
+#include "xml_node.h"
+#include "onvif.h"
+
 /*************************************************************************/
 typedef enum 
 {
     eActionNull = 0,
 
-    // onvif device service interfaces        
+    // onvif device service interfaces
     etdsGetCapabilities,
     etdsGetServices,
     etdsGetServiceCapabilities,
@@ -55,8 +59,8 @@ typedef enum
     etdsSetNetworkDefaultGateway,
     etdsGetZeroConfiguration,
     etdsSetZeroConfiguration,
-    etdsGetEndpointReference,    
-    etdsSendAuxiliaryCommand,    
+    etdsGetEndpointReference,
+    etdsSendAuxiliaryCommand,
     etdsGetRelayOutputs,
     etdsSetRelayOutputSettings,
     etdsSetRelayOutputState,
@@ -80,10 +84,14 @@ typedef enum
     etdsSetGeoLocation,
     etdsDeleteGeoLocation,
     etdsSetHashingAlgorithm,
+
+#ifdef IPFILTER_SUPPORT
     etdsGetIPAddressFilter,
     etdsSetIPAddressFilter,
     etdsAddIPAddressFilter,
     etdsRemoveIPAddressFilter,
+#endif
+
     etdsGetAccessPolicy,
     etdsSetAccessPolicy,
     etdsGetStorageConfigurations,
@@ -113,7 +121,7 @@ typedef enum
     etrtRemovePTZConfiguration,
     etrtDeleteProfile,
     etrtGetVideoSourceConfigurations,
-    etrtGetVideoEncoderConfigurations,    
+    etrtGetVideoEncoderConfigurations,
     etrtGetAudioSourceConfigurations,
     etrtGetAudioEncoderConfigurations,
     etrtGetVideoSourceConfiguration,
@@ -121,14 +129,14 @@ typedef enum
     etrtGetAudioSourceConfiguration,
     etrtGetAudioEncoderConfiguration,
     etrtSetVideoSourceConfiguration,
-    etrtSetVideoEncoderConfiguration,    
+    etrtSetVideoEncoderConfiguration,
     etrtSetAudioSourceConfiguration,
     etrtSetAudioEncoderConfiguration,
     etrtGetVideoSourceConfigurationOptions,
-    etrtGetVideoEncoderConfigurationOptions,    
+    etrtGetVideoEncoderConfigurationOptions,
     etrtGetAudioSourceConfigurationOptions,
-    etrtGetAudioEncoderConfigurationOptions,    
-    etrtGetStreamUri,    
+    etrtGetAudioEncoderConfigurationOptions,
+    etrtGetStreamUri,
     etrtSetSynchronizationPoint,
     etrtGetSnapshotUri,
     etrtGetGuaranteedNumberOfVideoEncoderInstances,
@@ -232,7 +240,7 @@ typedef enum
     eptzStop,
     eptzGetConfigurations,
     eptzGetConfiguration,
-    eptzSetConfiguration,    
+    eptzSetConfiguration,
     eptzGetConfigurationOptions,
     eptzGetPresetTours,
     eptzGetPresetTour,
@@ -272,6 +280,23 @@ typedef enum
     eimgGetCurrentPreset,
     eimgSetCurrentPreset,
 
+    // onvif analytics service interfaces
+    etanGetServiceCapabilities,
+    etanGetSupportedRules,
+    etanCreateRules,
+    etanDeleteRules,
+    etanGetRules,
+    etanModifyRules,
+    etanCreateAnalyticsModules,
+    etanDeleteAnalyticsModules,
+    etanGetAnalyticsModules,
+    etanModifyAnalyticsModules,
+    etanGetSupportedAnalyticsModules,
+    etanGetRuleOptions,
+    etanGetAnalyticsModuleOptions,
+    etanGetSupportedMetadata,
+    
+#ifdef DEVICEIO_SUPPORT
     // onvif device IO service interfaces
     etmdGetServiceCapabilities,
     etmdGetRelayOutputs,
@@ -286,7 +311,9 @@ typedef enum
     etmdSetSerialPortConfiguration,
     etmdGetSerialPortConfigurationOptions,
     etmdSendReceiveSerialCommand,
+#endif
 
+#ifdef PROFILE_G_SUPPORT
     // onvif recording service interfaces
     etrcGetServiceCapabilities,
     etrcCreateRecording,
@@ -331,23 +358,9 @@ typedef enum
     etseGetPTZPositionSearchResults,
     etseGetSearchState,
     etseEndSearch,
+#endif
 
-    // onvif analytics service interfaces
-    etanGetServiceCapabilities,
-    etanGetSupportedRules,
-    etanCreateRules,
-    etanDeleteRules,
-    etanGetRules,
-    etanModifyRules,
-    etanCreateAnalyticsModules,
-    etanDeleteAnalyticsModules,
-    etanGetAnalyticsModules,
-    etanModifyAnalyticsModules,
-    etanGetSupportedAnalyticsModules,
-    etanGetRuleOptions,
-    etanGetAnalyticsModuleOptions,
-    etanGetSupportedMetadata,
-    
+#ifdef PROFILE_C_SUPPORT
     // onvif access control service interface
     etacGetServiceCapabilities,
     etacGetAccessPointInfoList,
@@ -390,7 +403,9 @@ typedef enum
     etdcSetDoor,
     etdcModifyDoor,
     etdcDeleteDoor,
+#endif
 
+#ifdef THERMAL_SUPPORT
     // onvif thermal service interfaces
     etthGetServiceCapabilities,
     etthGetConfigurations,
@@ -400,7 +415,9 @@ typedef enum
     etthGetRadiometryConfiguration,
     etthSetRadiometryConfiguration,
     etthGetRadiometryConfigurationOptions,
+#endif
 
+#ifdef CREDENTIAL_SUPPORT
     // onvif credential service interfaces
     etcrGetServiceCapabilities,
     etcrGetCredentialInfo,
@@ -422,7 +439,9 @@ typedef enum
     etcrGetCredentialAccessProfiles,
     etcrSetCredentialAccessProfiles,
     etcrDeleteCredentialAccessProfiles,
-
+#endif
+    
+#ifdef ACCESS_RULES
     // onvif access rules service interfaces
     etarGetServiceCapabilities,
     etarGetAccessProfileInfo,
@@ -432,7 +451,9 @@ typedef enum
     etarCreateAccessProfile,
     etarModifyAccessProfile,
     etarDeleteAccessProfile,    
-
+#endif
+    
+#ifdef SCHEDULE_SUPPORT
     // onvif schedule service interface
     etscGetServiceCapabilities,
     etscGetScheduleInfo,
@@ -450,7 +471,9 @@ typedef enum
     etscModifySpecialDayGroup,
     etscDeleteSpecialDayGroup,
     etscGetScheduleState,
-
+#endif
+    
+#ifdef RECEIVER_SUPPORT
     // onvif receiver service interface
     etrvGetServiceCapabilities,
     etrvGetReceivers,
@@ -460,7 +483,9 @@ typedef enum
     etrvConfigureReceiver,
     etrvSetReceiverMode,
     etrvGetReceiverState,
-
+#endif
+    
+#ifdef PROVISIONING_SUPPORT
     // onvif provisioning service interface
     etpvGetServiceCapabilities,
     etpvPanMove,
@@ -470,7 +495,9 @@ typedef enum
     etpvFocusMove,
     etpvStop,
     etpvGetUsage,
-
+#endif
+    
+#ifdef SECURITY_SUPPORT
     // onvif security service interface
     etasGetServiceCapabilities,
     etasUploadPassphrase,
@@ -514,21 +541,29 @@ typedef enum
     etasGetAssignedCertPathValidationPolicies,
     etasSetEnabledTLSVersions,
     etasGetEnabledTLSVersions,
+#endif
 
     eActionMax
 } eOnvifAction;
 
+typedef BOOL (*soap_parser_fn)(XMLN * p_node, void * p_res);
+typedef int  (*xml_build_fn)(char * p_buf, int mlen, ONVIF_DEVICE * p_dev, void * argv);
+
 typedef struct
 {
-    eOnvifAction    type;
-    char            action_url[256];
-} OVFACTS;
+    eOnvifAction    action;
+    const char    * action_url;
+    const char    * node;
+    soap_parser_fn  parser;
+    int             result_size;
+    xml_build_fn    builder;
+} ONVIFACTS;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-HT_API OVFACTS * onvif_find_action_by_type(eOnvifAction type);
+HT_API ONVIFACTS * onvif_find_action(eOnvifAction action);
 
 #ifdef __cplusplus
 }

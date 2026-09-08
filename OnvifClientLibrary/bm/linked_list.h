@@ -42,15 +42,16 @@ extern "C" {
 #endif
 
 HT_API LKLIST * hlist_create(BOOL need_mutex);
-HT_API void     hlist_free_container(LKLIST *list);
-HT_API void     hlist_free_all_node(LKLIST *list);
+HT_API void     hlist_destroy(LKLIST *list);
+HT_API void     hlist_clear(LKLIST *list);
 
-HT_API void     hlist_get_ownership(LKLIST *list);
-HT_API void     hlist_giveup_ownership(LKLIST *list);
+HT_API void     hlist_lock(LKLIST *list);
+HT_API void     hlist_unlock(LKLIST *list);
 
 HT_API BOOL     hlist_remove(LKLIST *list, LKNODE *node);
+HT_API BOOL     hlist_remove_nolock(LKLIST *list, LKNODE *node);
 HT_API BOOL     hlist_remove_data(LKLIST *list, void *data);
-HT_API void     hlist_remove_from_front(LKLIST *    list);
+HT_API void     hlist_remove_from_front(LKLIST *list);
 HT_API void     hlist_remove_from_back(LKLIST *list);
 
 HT_API BOOL     hlist_add_at_front(LKLIST *list, void *data);

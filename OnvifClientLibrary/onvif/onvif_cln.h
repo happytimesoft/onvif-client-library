@@ -17,8 +17,8 @@
  *
 ****************************************************************************************/
 
-#ifndef ONVIF_CLIENT_H
-#define ONVIF_CLIENT_H
+#ifndef ONVIF_CLN_H
+#define ONVIF_CLN_H
 
 #include "onvif.h"
 #include "onvif_req.h"

@@ -34,6 +34,8 @@ typedef struct h_queue
     uint32      unit_size;
     uint32      front;
     uint32      rear;
+    uint32      front_idx;
+    uint32      rear_idx;
     uint32      queue_buffer;
     uint32      count_put_full;
 

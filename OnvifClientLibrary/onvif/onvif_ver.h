@@ -20,7 +20,7 @@
 #ifndef ONVIF_VER_H
 #define ONVIF_VER_H
 
-#define ONVIF_CLIENT_VERSION      "V12.9"
+#define ONVIF_CLIENT_VERSION      "V13.1"
 
 
 #endif

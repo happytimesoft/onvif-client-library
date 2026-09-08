@@ -29,18 +29,13 @@ extern "C" {
 #endif
 
 /***********************************************************************/
-HT_API BOOL       http_msg_buf_init(int num);
-HT_API void       http_msg_buf_deinit();
-
-/***********************************************************************/
 HT_API BOOL       http_is_http_msg(char * msg_buf);
-HT_API int        http_pkt_find_end(char * p_buf);
+HT_API int        http_hdr_find_end(char * p_buf, int buf_len);
 HT_API void       http_headl_parse(char * pline, int llen, HTTPMSG * p_msg);
 HT_API int        http_line_parse(char * p_buf, int max_len, char sep_char, PPSN_CTX * p_ctx);
 HT_API BOOL       http_get_headline_uri(HTTPMSG * rx_msg, char * p_uri, int size);
 HT_API BOOL       http_ctt_parse(HTTPMSG * p_msg);
 HT_API BOOL       http_cnt_parse(HTTPMSG * p_msg);
-HT_API int        http_msg_parse(char * msg_buf, int msg_buf_len, HTTPMSG * msg);
 HT_API int        http_msg_parse_part1(char * p_buf, int buf_len, HTTPMSG * msg);
 HT_API int        http_msg_parse_part2(char * p_buf, int buf_len, HTTPMSG * msg);
 HT_API HDRV     * http_find_headline(HTTPMSG * msg, const char * head);
@@ -50,16 +45,13 @@ HT_API HDRV     * http_find_ctt_headline(HTTPMSG * msg, const char * head);
 HT_API char     * http_get_ctt(HTTPMSG * msg);
 HT_API BOOL       http_get_auth_digest_info(HTTPMSG * rx_msg, HD_AUTH_INFO * p_auth);
 
-HT_API HTTPMSG  * http_get_msg_buf(int size);
-HT_API void       http_msg_ctx_init(HTTPMSG * msg);
-HT_API void       http_free_msg_buf(HTTPMSG * msg);
-HT_API uint32     http_idle_msg_buf_num();
-
 /***********************************************************************/
-HT_API void       http_free_msg(HTTPMSG * msg);
-HT_API void       http_free_msg_content(HTTPMSG * msg);
-HT_API void       http_free_msg_ctx(HTTPMSG * msg, int type);
-
+HT_API BOOL       http_msg_buf_init(int num);
+HT_API void       http_msg_buf_deinit();
+HT_API void       http_msg_ctx_init(HTTPMSG * msg);
+HT_API void       http_msg_ctx_deinit(HTTPMSG * msg);
+HT_API HTTPMSG  * http_get_msg_buf(int size);
+HT_API void       http_free_msg_buf(HTTPMSG * msg);
 
 #ifdef __cplusplus
 }

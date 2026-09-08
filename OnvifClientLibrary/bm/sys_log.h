@@ -17,12 +17,12 @@
  *
 ****************************************************************************************/
 
-#ifndef __H_SYS_LOG_H__
-#define __H_SYS_LOG_H__
+#ifndef SYS_LOG_H
+#define SYS_LOG_H
 
 // log level
 
-#define HT_LOG_TRC          0        
+#define HT_LOG_TRC          0
 #define HT_LOG_DBG          1
 #define HT_LOG_INFO         2
 #define HT_LOG_WARN         3
@@ -42,7 +42,7 @@ typedef struct
     int     cur_idx;    // Current log file index
     int     max_idx;    // Maximum file indexes
     int     rewind;     // Loop write log flag
-    time_t  pre_time;   // previous time
+    uint32  pre_time;   // previous time
     char    name[256];  // Log file name
     char    path[256];  // log path
 } HT_LOG_CTX;

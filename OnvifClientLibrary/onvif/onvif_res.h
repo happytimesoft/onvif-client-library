@@ -2300,7 +2300,7 @@ typedef struct
 
 typedef struct 
 {
-    int     sizePassphraseAttribute;
+    uint32  sizePassphraseAttribute;
     onvif_PassphraseAttribute PassphraseAttribute[20];  // Information about a passphrase in the keystore
 } tas_GetAllPassphrases_RES;
 
@@ -2339,7 +2339,7 @@ typedef struct
 
 typedef struct 
 {
-    int     sizeKeyAttribute;
+    uint32  sizeKeyAttribute;
     onvif_KeyAttribute KeyAttribute[20];                // Information about a key in the keystore
 } tas_GetAllKeys_RES;
 
@@ -2377,7 +2377,7 @@ typedef struct
 
 typedef struct 
 {
-    int     sizeCertificate;
+    uint32  sizeCertificate;
     onvif_X509Certificate Certificate[10];              // Information about a Certificate in the keystore
 } tas_GetAllCertificates_RES;
 
@@ -2398,7 +2398,7 @@ typedef struct
 
 typedef struct 
 {
-    int     sizeCertificationPathID;
+    uint32  sizeCertificationPathID;
     char    CertificationPathID[10][ONVIF_TOKEN_LEN];   // An ID of a certification path in the keystore
 } tas_GetAllCertificationPaths_RES;
 
@@ -2424,7 +2424,7 @@ typedef struct
 
 typedef struct 
 {
-    int     sizeCertPathValidationPolicy;
+    uint32  sizeCertPathValidationPolicy;
     onvif_CertPathValidationPolicy CertPathValidationPolicy[8]; // A list of all certification path validation policies that are stored in the keystore on the device
 } tas_GetAllCertPathValidationPolicies_RES;
 
@@ -2455,7 +2455,7 @@ typedef struct
 
 typedef struct 
 {
-    int     sizeCertificationPathID;
+    uint32  sizeCertificationPathID;
     char    CertificationPathID[8][64];                 // The IDs of all certification paths that are assigned to the TLS server on the device
 } tas_GetAssignedServerCertificates_RES;
 
@@ -2496,7 +2496,7 @@ typedef struct
 
 typedef struct 
 {
-    int     sizeCertPathValidationPolicyID;
+    uint32  sizeCertPathValidationPolicyID;
     char    CertPathValidationPolicyID[8][64];          // A list of IDs of the certification path validation policies that are assigned to the TLS server
 } tas_GetAssignedCertPathValidationPolicies_RES;
 

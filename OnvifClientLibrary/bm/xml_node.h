@@ -34,7 +34,7 @@
 
 typedef struct XMLN
 {
-    int             flag;       // Is the buffer pointed to by data dynamically allocated memory? If so, it needs to be free
+    int             flag;       // Is data dynamically allocated? If so, it needs to be freed
     const char *    name;
     uint32          type;
     const char *    data;
@@ -70,14 +70,14 @@ HT_API const char * xml_attr_get(XMLN * p_node, const char * name);
 HT_API XMLN *       xml_attr_node_get(XMLN * p_node, const char * name);
 
 /***************************************************************************************/
-HT_API void         xml_cdata_set(XMLN * p_node, const char * value, int len);
+HT_API void         xml_node_data_set(XMLN * p_node, const char * value, int len);
 
 /***************************************************************************************/
 HT_API int          xml_calc_buf_len(XMLN * p_node);
 HT_API int          xml_write_buf(XMLN * p_node, char * xml_buf, int buf_len);
 
 /***************************************************************************************/
-HT_API XMLN *       xxx_hxml_parse(char * p_xml, int len);
+HT_API XMLN *       xml_parse(char * p_xml, int len);
 
 #ifdef __cplusplus
 }

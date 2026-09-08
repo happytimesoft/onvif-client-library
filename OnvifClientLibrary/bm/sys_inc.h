@@ -17,8 +17,8 @@
  *
 ****************************************************************************************/
 
-#ifndef __SYS_INC_H__
-#define __SYS_INC_H__
+#ifndef SYS_INC_H
+#define SYS_INC_H
 
 #if defined(_WIN32) || defined(_WIN64)
 #define __WINDOWS_OS__  1
@@ -53,6 +53,8 @@ typedef unsigned char   uint8;
 /***************************************************************************************/
 #if __WINDOWS_OS__
 
+#define _CRT_RAND_S
+
 #include "stdafx.h"
 
 #include <io.h>
@@ -73,7 +75,12 @@ typedef unsigned char   uint8;
 
 #define strcasecmp          stricmp
 #define strncasecmp         strnicmp
-#define snprintf            _snprintf
+
+#define gmtime_r(t,st)      gmtime_s(st, t)
+#define localtime_r(t,st)   localtime_s(st, t)
+
+#define SET_SOCKTIMEO(tv,s) DWORD tv = (s)*1000
+#define TCP_SEND_FLAG       0
 
 typedef HANDLE              pthread_t;
 typedef UINT                HTIMER;
@@ -141,6 +148,9 @@ typedef uint64_t            uint64;
 
 #define closesocket         close
 
+#define SET_SOCKTIMEO(tv,s) struct timeval tv = {s,0}
+#define TCP_SEND_FLAG       MSG_DONTWAIT
+
 #endif
 
 /*************************************************************************/
@@ -183,7 +193,7 @@ HT_API void         sys_os_detach_thread(pthread_t tid);
 
 HT_API uint32       sys_os_get_ms();
 HT_API uint32       sys_os_get_uptime();
-HT_API char *       sys_os_get_socket_error();
+HT_API char *       sys_os_get_socket_error_str(char * buff, size_t len);
 HT_API int          sys_os_get_socket_error_num();
 
 #ifdef __cplusplus
